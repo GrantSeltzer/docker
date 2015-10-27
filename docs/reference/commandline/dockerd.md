@@ -19,6 +19,8 @@ weight = -1
     Options:
       --add-runtime=[]                       Register an additional OCI compatible runtime
       --api-cors-header=""                   Set CORS headers in the remote API
+      --authn=false                          Require clients to authenticate
+      --authn-opt=[]                         Set authentication options
       --authorization-plugin=[]              Set authorization plugins to load
       -b, --bridge=""                        Attach containers to a network bridge
       --bip=""                               Specify network bridge IP
@@ -938,6 +940,29 @@ Linux kernel has restrictions based on internal knowledge that this is a user na
 process. The most notable restriction that we are aware of at this time is the
 inability to use `mknod`. Permission will be denied for device creation even as
 container `root` inside a user namespace.
+
+## Authentication options
+
+Particular authentication schemes can be configured with options specified with
+`--authn-opt` flags.
+
+Here is the list of recognized authentication options:
+
+*  `plugins`
+
+In addition to authentication schemes implemented in and offered by the daemon,
+call the named plugin or plugins to produce challenges and check client
+responses in order to authenticate clients.
+
+Example use: `docker daemon --authn --authn-opt plugins=sss`
+
+*  `realm`
+
+When plugins offer HTTP authentication using the `Basic` scheme, they should
+use the specified name as the name of the authentication "realm".  The default
+is `localhost`.
+
+Example use: `docker daemon --authn --authn-opt realm=example.com`
 
 ## Miscellaneous options
 
