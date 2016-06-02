@@ -57,8 +57,9 @@ type DaemonCli struct {
 	commonFlags *cliflags.CommonFlags
 	configFile  *string
 
-	api *apiserver.Server
-	d   *daemon.Daemon
+	api             *apiserver.Server
+	d               *daemon.Daemon
+	authnMiddleware *authentication.Authentication
 }
 
 func presentInHelp(usage string) string { return usage }
@@ -338,6 +339,10 @@ func (cli *DaemonCli) reloadConfig() {
 			}
 
 		}
+		if err := cli.authnMiddleware.SetConfig(config.RequireAuthentication, config.AuthenticationOptions); err != nil {
+			logrus.Errorf("Error reconfiguring authentication middleware: %v", err)
+			return
+		}
 	}
 
 	if err := daemon.ReloadConfiguration(*cli.configFile, flag.CommandLine, reload); err != nil {
@@ -451,6 +456,6 @@ func (cli *DaemonCli) initMiddlewares(s *apiserver.Server, cfg *apiserver.Config
 	}
 
 	makeError := func(err error) error { return errors.NewUnauthorizedError(err) }
-	a := authentication.NewMiddleware(cli.Config.RequireAuthentication, cli.Config.AuthenticationOptions, makeError)
-	s.UseMiddleware(a)
+	cli.authnMiddleware = authentication.NewMiddleware(cli.Config.RequireAuthentication, cli.Config.AuthenticationOptions, makeError)
+	s.UseMiddleware(cli.authnMiddleware)
 }
